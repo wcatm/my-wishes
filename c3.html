@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>温馨提示 — 我想你了</title>
+  <style>
+    html,body{height:100%;margin:0;padding:0;overflow:hidden;background:#080814; font-family: "Microsoft YaHei", "PingFang SC", sans-serif;}
+    .tip {
+      position: absolute;
+      padding: 10px 14px;
+      border-radius: 10px;
+      color: #222;
+      font-size: 16px;
+      line-height:1.2;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+      transform-origin:center;
+      user-select:none;
+      white-space:nowrap;
+      opacity:1;
+      transition: transform 0.9s ease, opacity 0.9s ease;
+    }
+    .tip.hide {
+      transform: scale(0.6) rotate(-10deg);
+      opacity: 0;
+    }
+    #final {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%,-50%);
+      font-size: 40px;
+      font-weight:700;
+      letter-spacing:1px;
+      color:#ff6b9a;
+      display:none;
+      text-shadow: 0 8px 30px rgba(255,107,154,0.25);
+    }
+    .small {
+      font-size: 12px;
+      opacity:0.85;
+    }
+  </style>
+</head>
+<body>
+  <div id="final">我想你了 💗</div>
+
+  <script>
+    const tips = [
+      '多喝水哦~', '保持微笑呀', '每天都要元气满满',
+      '记得吃水果', '保持好心情', '好好爱自己', '我想你了',
+      '梦想成真', '期待下一次见面', '顺顺利利', '早点休息',
+      '愿所有烦恼都消失', '别熬夜', '今天过得开心嘛', '天冷了，多穿衣服'
+    ];
+
+    const bgColors = [
+      '#FFDFE6', '#D7F0FF', '#DFF7E3', '#F7E8FF',
+      '#FFF5C9', '#EADCF6', '#FFD9CC', '#FFEBD6',
+      '#CFF7F0', '#FFEFF2', '#F0FFF4', '#FFF0F2'
+    ];
+
+    function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+    function randColor(){ return bgColors[randInt(0,bgColors.length-1)]; }
+
+    // 创建单个 tip
+    function createTip(text){
+      const el = document.createElement('div');
+      el.className = 'tip';
+      el.textContent = text;
+      el.style.background = randColor();
+
+      const w = 220 + Math.random()*80; // 大小随机
+      el.style.width = w + 'px';
+      // 随机位置（尽量在可视区）
+      const x = Math.random()*(window.innerWidth - w - 20) + 10;
+      const y = Math.random()*(window.innerHeight - 60) + 10;
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+
+      // 轻微旋转
+      el.style.transform = `rotate(${randInt(-15,15)}deg) scale(${(0.9 + Math.random()*0.2).toFixed(2)})`;
+
+      document.body.appendChild(el);
+
+      // 在出现后随机延迟收起（fade out + remove）
+      const lifetime = randInt(1600, 4200);
+      setTimeout(()=>{
+        el.classList.add('hide');
+        setTimeout(()=> el.remove(), 900);
+      }, lifetime);
+      return el;
+    }
+
+    // 快速生成 n 个提示
+    function spawnTips(n, interval=30){
+      let i=0;
+      const t = setInterval(()=>{
+        createTip(tips[Math.floor(Math.random()*tips.length)]);
+        i++;
+        if(i>=n) clearInterval(t);
+      }, interval);
+    }
+
+    // 主流程：先生成大量提示，然后逐个让它们消失，最后显示 final 文案
+    function runSequence(){
+      // 总数与间隔（可调整）
+      const TOTAL = 120;
+      const BURST_INTERVAL = 20; // 每个生成的间隔ms
+
+      spawnTips(TOTAL, BURST_INTERVAL);
+
+      // 计算大约多久后显示最终文字（等到大部分提示消失）
+      const approxDuration = 4000 + TOTAL * BURST_INTERVAL;
+      setTimeout(()=> {
+        // 隐藏剩余的提示（选中并淡出）
+        document.querySelectorAll('.tip').forEach((el,idx)=>{
+          setTimeout(()=> {
+            el.classList.add('hide');
+            setTimeout(()=>el.remove(),900);
+          }, idx*20);
+        });
+
+        // 显示最终文字
+        const f = document.getElementById('final');
+        f.style.display = 'block';
+        f.style.opacity = 0;
+        f.style.transition = 'opacity 1s ease, transform 1s ease';
+        setTimeout(()=> { f.style.opacity = 1; f.style.transform = 'translate(-50%,-50%) scale(1.02)'; }, 40);
+      }, approxDuration + 800);
+    }
+
+    // 等页面就绪后运行
+    window.addEventListener('load', runSequence);
+
+    // 窗口调整尺寸时不让提示超出（简单处理：移除所有）
+    window.addEventListener('resize', ()=> {
+      document.querySelectorAll('.tip').forEach(el => el.remove());
+    });
+  </script>
+</body>
+</html>
